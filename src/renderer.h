@@ -5,8 +5,16 @@
 #include "SDL.h"
 #include "snake.h"
 
-class Renderer {
- public:
+struct SDL_Deleter
+{
+  void operator()(SDL_Window *p) const { SDL_DestroyWindow(p); }
+  void operator()(SDL_Renderer *p) const { SDL_DestroyRenderer(p); }
+  void operator()(SDL_Texture *p) const { SDL_DestroyTexture(p); }
+};
+
+class Renderer
+{
+public:
   Renderer(const std::size_t screen_width, const std::size_t screen_height,
            const std::size_t grid_width, const std::size_t grid_height);
   ~Renderer();
@@ -14,9 +22,9 @@ class Renderer {
   void Render(Snake const snake, SDL_Point const &food);
   void UpdateWindowTitle(int score, int fps);
 
- private:
-  SDL_Window *sdl_window;
-  SDL_Renderer *sdl_renderer;
+private:
+  std::unique_ptr<SDL_Window, SDL_Deleter> _window;
+  std::unique_ptr<SDL_Renderer, SDL_Deleter> _renderer;
 
   const std::size_t screen_width;
   const std::size_t screen_height;
