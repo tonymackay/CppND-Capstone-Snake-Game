@@ -33,7 +33,8 @@ Renderer::Renderer(const std::size_t screen_width,
   }
 }
 
-Renderer::~Renderer() {
+Renderer::~Renderer() {  
+  SDL_DestroyRenderer(sdl_renderer);
   SDL_DestroyWindow(sdl_window);
   SDL_Quit();
 }
