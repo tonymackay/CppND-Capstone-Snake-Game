@@ -21,8 +21,7 @@ Renderer::Renderer(const std::size_t screen_width,
   _window = std::unique_ptr<SDL_Window, SDL_Deleter>(
       SDL_CreateWindow("Snake Game", SDL_WINDOWPOS_CENTERED,
                        SDL_WINDOWPOS_CENTERED, screen_width,
-                       screen_height, SDL_WINDOW_SHOWN),
-      SDL_Deleter());
+                       screen_height, SDL_WINDOW_SHOWN));
 
   if (_window.get() == nullptr)
   {
@@ -32,9 +31,9 @@ Renderer::Renderer(const std::size_t screen_width,
 
   // Create renderer using a unique smart pointer
   _renderer = std::unique_ptr<SDL_Renderer, SDL_Deleter>(
-      SDL_CreateRenderer(_window.get(), -1, SDL_RENDERER_ACCELERATED), SDL_Deleter());
+      SDL_CreateRenderer(_window.get(), -1, SDL_RENDERER_ACCELERATED));
 
-  if (nullptr == _renderer.get())
+  if (_renderer.get() == nullptr)
   {
     std::cerr << "Renderer could not be created.\n";
     std::cerr << "SDL_Error: " << SDL_GetError() << "\n";
