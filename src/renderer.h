@@ -4,6 +4,7 @@
 #include <vector>
 #include "SDL.h"
 #include "snake.h"
+#include "score_counter.h"
 
 struct SDL_Deleter
 {
@@ -20,7 +21,7 @@ public:
   ~Renderer();
 
   void Render(Snake const snake, SDL_Point const &food);
-  void UpdateWindowTitle(int score, int fps);
+  void UpdateWindowTitle(ScoreCounter &score_counter, int fps);
 
 private:
   std::unique_ptr<SDL_Window, SDL_Deleter> _window;
