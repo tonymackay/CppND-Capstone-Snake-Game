@@ -4,9 +4,13 @@
 class ScoreCounter
 {
 public:
+  ScoreCounter();
+  ~ScoreCounter();
   int Score() const;
   int HighScore() const;
   void IncreaseScore();
+  void Save();
+  void Load();
   
 private:
   int _score{0};
