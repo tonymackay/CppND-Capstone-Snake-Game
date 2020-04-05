@@ -1,12 +1,38 @@
-# CPPND: Capstone Snake Game Example
-
-This is a starter repo for the Capstone project in the [Udacity C++ Nanodegree Program](https://www.udacity.com/course/c-plus-plus-nanodegree--nd213). The code for this repo was inspired by [this](https://codereview.stackexchange.com/questions/212296/snake-game-in-c-with-sdl) excellent StackOverflow post and set of responses.
+# CPPND: Capstone Snake Game
+This repo is a fork of the Udacity C++ Nanodegree Capstone Snake Game with changes made to meet the project rubric.
 
 <img src="snake_game.gif"/>
 
-The Capstone Project gives you a chance to integrate what you've learned throughout this program. This project will become an important part of your portfolio to share with current and future colleagues and employers.
+Here are the changes made to the project:
+- Fixed a bug that would place food outside the view.
+- Refactored the score into a new class with the ability to save and load High scores.
+- Used threads to move the food at random durations.
 
-In this project, you can build your own C++ application or extend this Snake game, following the principles you have learned throughout this Nanodegree Program. This project will demonstrate that you can independently create applications using a wide range of C++ features.
+## Project Rubric Points
+This project meets the project rubric points 
+
+### Loops, Functions, I/O
+- The project demonstrates an understanding of C++ functions and control structures.
+- The project reads data from a file and process the data, or the program writes data to a file.
+- The project accepts user input and processes the input.
+
+### Loops, Functions, I/O
+- The project uses Object Oriented Programming techniques throughout the code.
+- Classes use appropriate access specifiers for class members.
+- Class constructors utilize member initialization lists.
+- Classes abstract implementation details from their interfaces.
+- Classes encapsulate behavior.
+
+### Memory Management
+- The project makes use of references in function declarations.
+- The project uses destructors appropriately (See renderer.cpp and score_counter.cpp).
+- The project uses scope / Resource Acquisition Is Initialization (RAII) where appropriate.
+- The project uses smart pointers instead of raw pointers (See renderer.cpp SDL_Window and SDL_Renderer has been changed to use a unique smart pointer).
+
+### Memory Management
+- The project uses multithreading (See game.cpp).
+- A mutex or lock is used in the project (See game.cpp).
+- A condition variable is used in the project (See game.cpp).
 
 ## Dependencies for Running Locally
 * cmake >= 3.7
@@ -24,7 +50,7 @@ In this project, you can build your own C++ application or extend this Snake gam
   * Mac: same deal as make - [install Xcode command line tools](https://developer.apple.com/xcode/features/)
   * Windows: recommend using [MinGW](http://www.mingw.org/)
 
-## Basic Build Instructions
+## Build Instructions
 
 1. Clone this repo.
 2. Make a build directory in the top level directory: `mkdir build && cd build`
