@@ -29,7 +29,7 @@ This project meets the project rubric points
 - The project uses scope / Resource Acquisition Is Initialization (RAII) where appropriate.
 - The project uses smart pointers instead of raw pointers (See renderer.cpp SDL_Window and SDL_Renderer has been changed to use a unique smart pointer).
 
-### Memory Management
+### Concurrency
 - The project uses multithreading (See game.cpp).
 - A mutex or lock is used in the project (See game.cpp).
 - A condition variable is used in the project (See game.cpp).
