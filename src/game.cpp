@@ -1,12 +1,15 @@
 #include "game.h"
-#include <iostream>
 #include "SDL.h"
+#include <iostream>
+#include <thread>
+#include <future>
 
 Game::Game(std::size_t grid_width, std::size_t grid_height)
     : snake(grid_width, grid_height),
       engine(dev()),
       random_w(0, static_cast<int>(grid_width - 1)),
-      random_h(0, static_cast<int>(grid_height - 1)) {
+      random_h(0, static_cast<int>(grid_height - 1)),
+      random_s(2, 20) {
   PlaceFood();
 }
 
@@ -18,6 +21,17 @@ void Game::Run(Controller const &controller, Renderer &renderer,
   Uint32 frame_duration;
   int frame_count = 0;
   bool running = true;
+
+  // create a thread to move the food after a random duration of between 2 and 20 seconds
+  bool moving_food = true;
+  std::thread thread = std::thread([&]() {
+    while(moving_food) {
+      std::unique_lock<std::mutex> uLock(_mutex);
+      int seconds = random_s(engine);
+      PlaceFood();
+      _cv.wait_for(uLock, std::chrono::seconds(seconds), [&]() { return moving_food == false; });
+    }
+  });
 
   while (running) {
     frame_start = SDL_GetTicks();
@@ -48,6 +62,12 @@ void Game::Run(Controller const &controller, Renderer &renderer,
       SDL_Delay(target_frame_duration - frame_duration);
     }
   }
+
+  std::unique_lock<std::mutex> uLock(_mutex);
+  moving_food = false;
+  uLock.unlock();
+  _cv.notify_all();
+  thread.join();
 }
 
 void Game::PlaceFood() {

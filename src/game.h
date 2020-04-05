@@ -2,6 +2,8 @@
 #define GAME_H
 
 #include <random>
+#include <mutex>
+#include <condition_variable>
 #include "SDL.h"
 #include "controller.h"
 #include "renderer.h"
@@ -25,6 +27,10 @@ class Game {
   std::mt19937 engine;
   std::uniform_int_distribution<int> random_w;
   std::uniform_int_distribution<int> random_h;
+  std::uniform_int_distribution<int> random_s;
+
+  std::mutex _mutex;
+  std::condition_variable _cv;
 
   void PlaceFood();
   void Update();
