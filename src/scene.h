@@ -4,6 +4,7 @@
 #include "SDL.h"
 #include "game_object.h"
 #include <vector>
+#include <memory>
 
 class Scene
 {
