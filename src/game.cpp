@@ -1,107 +1,136 @@
 #include "game.h"
-#include "SDL.h"
+#include "scene.h"
+#include "snake.h"
+#include "food.h"
+#include "score.h"
 #include <iostream>
-#include <thread>
-#include <future>
 
-Game::Game(std::size_t grid_width, std::size_t grid_height)
-    : snake(grid_width, grid_height),
-      engine(dev()),
-      random_w(0, static_cast<int>(grid_width - 1)),
-      random_h(0, static_cast<int>(grid_height - 1)),
-      random_s(2, 20) {
-  PlaceFood();
-}
+Game::Game(int screen_w, int screen_h)
+{
+    _window = sdlw::CreateWindow(
+        "Snake Game",
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        screen_w,
+        screen_h,
+        SDL_WINDOW_SHOWN
+    );
 
-void Game::Run(Controller const &controller, Renderer &renderer,
-               std::size_t target_frame_duration) {
-  Uint32 title_timestamp = SDL_GetTicks();
-  Uint32 frame_start;
-  Uint32 frame_end;
-  Uint32 frame_duration;
-  int frame_count = 0;
-  bool running = true;
-
-  // create a thread to move the food after a random duration of between 2 and 20 seconds
-  bool moving_food = true;
-  std::thread thread = std::thread([&]() {
-    while(moving_food) {
-      std::unique_lock<std::mutex> uLock(_mutex);
-      int seconds = random_s(engine);
-      PlaceFood();
-      _cv.wait_for(uLock, std::chrono::seconds(seconds), [&]() { return moving_food == false; });
-    }
-  });
-
-  while (running) {
-    frame_start = SDL_GetTicks();
-
-    // Input, Update, Render - the main game loop.
-    controller.HandleInput(running, snake);
-    Update();
-    renderer.Render(snake, food);
-
-    frame_end = SDL_GetTicks();
-
-    // Keep track of how long each loop through the input/update/render cycle
-    // takes.
-    frame_count++;
-    frame_duration = frame_end - frame_start;
-
-    // After every second, update the window title.
-    if (frame_end - title_timestamp >= 1000) {
-      renderer.UpdateWindowTitle(_score_counter, frame_count);
-      frame_count = 0;
-      title_timestamp = frame_end;
+    if (_window.get() == nullptr)
+    {
+        std::cerr << "Window could not be created.\n";
+        std::cerr << " SDL_Error: " << SDL_GetError() << "\n";
+        return;
     }
 
-    // If the time for this frame is too small (i.e. frame_duration is
-    // smaller than the target ms_per_frame), delay the loop to
-    // achieve the correct frame rate.
-    if (frame_duration < target_frame_duration) {
-      SDL_Delay(target_frame_duration - frame_duration);
+    _renderer = sdlw::CreateRenderer(_window.get(), -1, SDL_RENDERER_ACCELERATED);
+
+    if (_renderer.get() == nullptr)
+    {
+        std::cerr << "Renderer could not be created.\n";
+        std::cerr << "SDL_Error: " << SDL_GetError() << "\n";
+        return;
     }
-  }
-
-  std::unique_lock<std::mutex> uLock(_mutex);
-  moving_food = false;
-  uLock.unlock();
-  _cv.notify_all();
-  thread.join();
 }
 
-void Game::PlaceFood() {
-  int x, y;
-  while (true) {
-    x = random_w(engine);
-    y = random_h(engine);
-    // Check that the location is not occupied by a snake item before placing
-    // food.
-    if (!snake.SnakeCell(x, y)) {
-      food.x = x;
-      food.y = y;
-      return;
+Game::~Game()
+{
+}
+
+void Game::Run(Uint32 target_frame_duration)
+{
+    Uint32 title_timestamp = SDL_GetTicks();
+    Uint32 frame_start;
+    Uint32 frame_end;
+    Uint32 frame_duration;
+    int frame_count = 0;
+    _running = true;
+
+    while (_running)
+    {
+        frame_start = SDL_GetTicks();
+
+        // handle input (only send to snake when playing)
+        SDL_Event e;
+        while (SDL_PollEvent(&e))
+        {
+            if (e.type == SDL_QUIT)
+            {
+                Quit();
+            }
+            if (e.type == SDL_KEYDOWN)
+            {
+                for(auto c : _input)
+                {
+                    c(e.key.keysym.sym);
+                }
+            }
+        }
+
+        // update all game objects here
+        if (!_paused)
+        {
+            _scene.Update();
+        }
+
+        _scene.Render(_renderer.get());
+
+        // time since work done
+        frame_end = SDL_GetTicks();
+
+        // Keep track of how long each loop through the input/update/render cycle
+        // takes.
+        frame_count++;
+        frame_duration = frame_end - frame_start;
+
+        // After every second, update the window title.
+        if (frame_end - title_timestamp >= 1000)
+        {
+            if (_paused)
+            {
+                std::string title{"PAUSED - FPS: " + std::to_string(frame_count)};
+                SDL_SetWindowTitle(_window.get(), title.c_str());
+            }
+            else
+            {
+                std::string title{"PLAYING - FPS: " + std::to_string(frame_count)};
+                SDL_SetWindowTitle(_window.get(), title.c_str());
+            }
+            frame_count = 0;
+            title_timestamp = frame_end;
+        }
+
+        // If the time for this frame is too small (i.e. frame_duration is
+        // smaller than the target ms_per_frame), delay the loop to
+        // achieve the correct frame rate.
+        if (frame_duration < target_frame_duration)
+        {
+            SDL_Delay(target_frame_duration - frame_duration);
+        }
     }
-  }
 }
 
-void Game::Update() {
-  if (!snake.alive) return;
-
-  snake.Update();
-
-  int new_x = static_cast<int>(snake.head_x);
-  int new_y = static_cast<int>(snake.head_y);
-
-  // Check if there's food over here
-  if (food.x == new_x && food.y == new_y) {
-    _score_counter.IncreaseScore();
-    PlaceFood();
-    // Grow snake and increase speed.
-    snake.GrowBody();
-    snake.speed += 0.02;
-  }
+void Game::Quit()
+{
+    _running = false;
 }
 
-int Game::GetScore() const { return _score_counter.Score(); }
-int Game::GetSize() const { return snake.size; }
+void Game::OnKeyDown(std::function<void(int)> f)
+{
+    _input.push_back(f);
+}
+
+Scene& Game::GetScene()
+{
+    return _scene;
+}
+
+bool Game::Paused() const 
+{
+    return _paused;
+}
+
+void Game::PauseUnpause()
+{
+    _paused = _paused = !_paused;
+}

@@ -1,40 +1,32 @@
 #ifndef SNAKE_H
 #define SNAKE_H
 
+#include "game_object.h"
+#include "score.h"
 #include <vector>
-#include "SDL.h"
 
-class Snake {
- public:
-  enum class Direction { kUp, kDown, kLeft, kRight };
+class Snake : public GameObject
+{
+public:
+    Snake(std::shared_ptr<Score> score);
+    virtual void Update();
+    virtual void Render(SDL_Renderer* renderer);
+    void HandleInput(const SDL_Keycode& input);
+    enum class Direction { Up, Down, Left, Right };
+    bool SnakeCell(int x, int y);
+    void GrowBody();
+private:
+    std::shared_ptr<Score> _score;
+    bool _growing{false};
+    bool _alive{true};
+    float _speed{0.1f};
+    int _size{1};
+    std::vector<SDL_Point> _body{};
+    Direction _direction{Direction::Up};
 
-  Snake(int grid_width, int grid_height)
-      : grid_width(grid_width),
-        grid_height(grid_height),
-        head_x(grid_width / 2),
-        head_y(grid_height / 2) {}
-
-  void Update();
-
-  void GrowBody();
-  bool SnakeCell(int x, int y);
-
-  Direction direction = Direction::kUp;
-
-  float speed{0.1f};
-  int size{1};
-  bool alive{true};
-  float head_x;
-  float head_y;
-  std::vector<SDL_Point> body;
-
- private:
-  void UpdateHead();
-  void UpdateBody(SDL_Point &current_cell, SDL_Point &prev_cell);
-
-  bool growing{false};
-  int grid_width;
-  int grid_height;
+    void ChangeDirection(Direction input, Direction opposite);
+    void UpdateHead();
+    void UpdateBody(SDL_Point &current_head_cell, SDL_Point &prev_head_cell);
 };
 
 #endif

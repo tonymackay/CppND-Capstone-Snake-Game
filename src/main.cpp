@@ -1,22 +1,38 @@
-#include <iostream>
-#include "controller.h"
+#include "sdl_w.h"
 #include "game.h"
-#include "renderer.h"
+#include "snake.h"
+#include "score.h"
+#include "food.h"
+#include <iostream>
 
-int main() {
-  constexpr std::size_t kFramesPerSecond{60};
-  constexpr std::size_t kMsPerFrame{1000 / kFramesPerSecond};
-  constexpr std::size_t kScreenWidth{640};
-  constexpr std::size_t kScreenHeight{640};
-  constexpr std::size_t kGridWidth{32};
-  constexpr std::size_t kGridHeight{32};
+int main()
+{
+    sdlw::Init();
+    {
+        auto score = std::make_shared<Score>();
+        auto snake = std::make_shared<Snake>(score);
+        auto food = std::make_shared<Food>(snake);
 
-  Renderer renderer(kScreenWidth, kScreenHeight, kGridWidth, kGridHeight);
-  Controller controller;
-  Game game(kGridWidth, kGridHeight);
-  game.Run(controller, renderer, kMsPerFrame);
-  std::cout << "Game has terminated successfully!\n";
-  std::cout << "Score: " << game.GetScore() << "\n";
-  std::cout << "Size: " << game.GetSize() << "\n";
-  return 0;
+        Game game{640, 640};
+
+        game.GetScene().AddObject(snake);
+        game.GetScene().AddObject(food);
+        game.GetScene().AddObject(score);
+
+        game.OnKeyDown(
+            [&](SDL_Keycode key) {
+                if (key == SDLK_ESCAPE)
+                    game.Quit();
+
+                if (key == SDLK_SPACE)
+                    game.PauseUnpause();
+
+                if (!game.Paused())
+                    snake->HandleInput(key);
+            });
+
+        game.Run(1000 / 60);
+    }
+    sdlw::Quit();
+    return 0;
 }

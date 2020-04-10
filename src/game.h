@@ -1,39 +1,31 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include <random>
-#include <mutex>
-#include <condition_variable>
-#include "SDL.h"
-#include "controller.h"
-#include "renderer.h"
-#include "snake.h"
-#include "score_counter.h"
+#include "sdl_w.h"
+#include "scene.h"
+#include <memory>
+#include <functional>
+#include <vector>
 
-class Game {
- public:
-  Game(std::size_t grid_width, std::size_t grid_height);
-  void Run(Controller const &controller, Renderer &renderer,
-           std::size_t target_frame_duration);
-  int GetScore() const;
-  int GetSize() const;
+class Game
+{
+public:
+  Game(int screen_w, int screen_h);
+  ~Game();
+  void Run(Uint32 target_frame_duration);
+  void Quit();
+  void OnKeyDown(std::function<void(SDL_Keycode)> f);
+  Scene& GetScene();
+  bool Paused() const;
+  void PauseUnpause();
 
- private:
-  Snake snake;
-  SDL_Point food;
-  ScoreCounter _score_counter;
-
-  std::random_device dev;
-  std::mt19937 engine;
-  std::uniform_int_distribution<int> random_w;
-  std::uniform_int_distribution<int> random_h;
-  std::uniform_int_distribution<int> random_s;
-
-  std::mutex _mutex;
-  std::condition_variable _cv;
-
-  void PlaceFood();
-  void Update();
+private:
+  Scene _scene{};
+  bool _paused{false};
+  bool _running{false};
+  std::unique_ptr<SDL_Window, sdlw::SDL_Deleter> _window;
+  std::unique_ptr<SDL_Renderer, sdlw::SDL_Deleter> _renderer;
+  std::vector<std::function<void(SDL_Keycode)>> _input{};
 };
 
 #endif
